@@ -46,11 +46,14 @@ function textToScore(response) {
  * - Column 0 (A): ID
  * - Column 1 (B): Start time
  * - Column 2 (C): Completion time
- * - Column 3 (D): Email
- * - Column 4 (E): Name (respondent name)
+ * - Column 3 (D): Email address (IGNORED - not read or stored for privacy)
+ * - Column 4 (E): Respondent name (THIS IS WHAT WE USE)
  * - Column 5 (F): Last modified time
  * - Columns 6-8 (G-I): Open-ended questions (skipped)
  * - Columns 9-90 (J-CM): 82 scoreable Likert scale questions
+ *
+ * PRIVACY NOTE: Email addresses in column D are intentionally not read,
+ * parsed, stored, or included in any output to protect PII.
  *
  * @param {string} filePath - Path to Excel file
  * @returns {Object} Structured data with respondents and questions
@@ -84,7 +87,8 @@ function parseExcelFile(filePath) {
     for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
       const row = dataRows[rowIndex];
 
-      // Extract respondent name from column E (index 4)
+      // IMPORTANT: Column D (index 3) contains email addresses - we explicitly DO NOT read or store them
+      // Extract respondent name from column E (index 4) only
       const name = row[4] ? String(row[4]).trim() : `Respondent ${rowIndex + 1}`;
 
       // Extract scores from columns 9-90 (82 scoreable questions)

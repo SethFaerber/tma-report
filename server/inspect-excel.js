@@ -30,7 +30,8 @@ console.log('\nFirst respondent (columns 0-15):');
 if (data[1]) {
   for (let i = 0; i < Math.min(15, data[1].length); i++) {
     const letter = String.fromCharCode(65 + i);
-    const value = String(data[1][i]).substring(0, 50);
+    // Redact email addresses (column 3/D) for privacy
+    const value = i === 3 ? '[EMAIL REDACTED]' : String(data[1][i]).substring(0, 50);
     console.log(`  Col ${i} (${letter}): "${value}"`);
   }
 }
