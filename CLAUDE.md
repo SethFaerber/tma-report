@@ -5,6 +5,30 @@ This is a Node.js + React web application that processes Strategic Maturity Asse
 
 **Project Type**: Scrappy v1 - Built for speed, meant to be functional and maintainable but not over-engineered.
 
+## Security & Privacy Guidelines
+
+### CRITICAL: Environment Variables & Secrets
+**NEVER read, inspect, or reference the contents of `.env` files or any files containing API keys, secrets, or credentials.**
+
+This includes:
+- `.env` (or any `.env.*` files)
+- Any files containing API keys, tokens, or passwords
+- Configuration files with sensitive credentials
+
+**Rationale**:
+- Protects API keys and secrets from accidental exposure
+- Prevents credential leakage in logs, outputs, or conversation history
+- Maintains security best practices
+
+**If configuration assistance is needed**: Provide format examples or templates without actual values. Users will configure their own credentials independently.
+
+**Example of acceptable guidance**:
+```
+# .env format (user fills in their own values)
+ANTHROPIC_API_KEY=your_key_here
+PORT=3001
+```
+
 ## Architecture
 
 ### Monorepo Structure
@@ -162,6 +186,108 @@ The actual Microsoft Forms export has the following structure:
 - Drivers: Purpose (9 questions), People (24 questions), Plan (20 questions), Product (23 questions), Profit (11 questions)
 - **Note**: Profit has 11 questions (not 10 as initially assumed)
 - Includes validation warning if question count ≠ 82
+
+### Phase 2: AI & PDF Generation (COMPLETED)
+
+#### Claude AI Service (`server/services/claudeService.js`)
+- Integrates with Anthropic Claude API (model: `claude-opus-4-20250514`)
+- Generates interpretive insights based on pre-calculated statistics
+- **Does NOT perform calculations** - only interprets data provided by calculator service
+- Output format: JSON with structured insights
+
+**Claude Analysis Includes**:
+1. **Executive Summary**: 2-4 sentence overview of team's strategic maturity
+2. **Discussion Questions**: 3 AI-generated questions specific to the data patterns
+3. **Team Member Analysis**: Individual insights and follow-up questions for each respondent
+4. **Special Analysis** (optional): Response to user-provided custom instructions
+
+**Date Format**: Uses spec-compliant format "16-Jan-26" (day-month-year with 3-letter month)
+
+**Error Handling**:
+- 401: Invalid API key - user-friendly message
+- 429: Rate limit - retry message
+- JSON parsing errors: Graceful fallback with error message
+- All errors logged server-side, user sees clean messages
+
+**Testing Notes**:
+- Successfully tested with 13-respondent dataset
+- API response time: 20-40 seconds (typical for Claude Opus)
+- JSON parsing reliable with proper prompt structure
+
+#### PDF Generator Service (`server/services/pdfGenerator.js`)
+- Uses PDFKit to create multi-page professionally formatted reports
+- Page size: US Letter (612 x 792 points)
+- Margins: 50 points on all sides
+- Manual Y-position tracking with automatic page breaks
+
+**PDF Structure** (12+ pages):
+1. **Cover Page**: Title, logo, team name, date
+2. **Team Summary**: Executive summary + driver scores table with annotations
+3. **Areas of Alignment** (2 pages): Questions sorted by lowest std dev (most agreement) with distribution tables
+4. **Areas of Key Difference** (2 pages): Questions sorted by highest std dev (most disagreement)
+5. **Highest Scores** (2 pages): Team's biggest strengths
+6. **Lowest Scores** (2 pages): Team's biggest weaknesses
+7. **Discussion Questions**: 4 fixed + 3 AI-generated questions
+8. **Team Member Analysis** (variable pages): Individual profiles with insights and follow-up questions
+9. **Additional Analysis** (optional): Response to special instructions
+
+**Layout Details**:
+- Distribution tables: 7 columns (Driver, Skill & Competency, 1, 2, 3, 4, 5)
+- Average tables: 3 columns (Driver, Skill & Competency, Average)
+- Font: Helvetica (standard, bold, oblique variants)
+- Colors: Black text, blue accents for annotations, gray lines
+- Text truncation: Long questions abbreviated with "..." to fit columns
+- Driver grouping: Driver name shown only for first question in each group
+
+**Page Break Logic**:
+- Tracks Y position throughout document
+- Adds new page when Y > 692 (PAGE_HEIGHT - 100)
+- Ensures team member sections stay together
+
+**Testing Notes**:
+- Successfully generated 17-page PDF for 13-respondent dataset
+- All sections render correctly with proper formatting
+- Logo displays correctly (200px width, centered)
+- Page breaks prevent content overflow
+
+#### Privacy & PII Protection
+**CRITICAL**: Email addresses are intentionally **NOT** read, parsed, stored, or included in any output.
+
+- Excel column D (index 3) contains email addresses - explicitly ignored
+- Only respondent names (column E, index 4) are extracted
+- `inspect-excel.js` utility redacts email addresses in output
+- Test outputs contain names only, no email addresses
+- All code includes explicit comments about email column being skipped
+
+**Rationale**: Protect PII, minimize data exposure, comply with privacy best practices
+
+## Known Issues & Workarounds
+
+### Excel Filename Handling
+**Problem**: Microsoft Forms exports Excel files with complex filenames containing spaces, commas, parentheses, and dates (e.g., "Strategic Maturity Assessment - Trusted Exec Team, February 2025(1-13).xlsx"). These filenames cause issues in shell environments and some file path operations.
+
+**Root Cause**: Shell parsing struggles with unescaped special characters in filenames, even when quoted.
+
+**Solution for Production**:
+1. **Multer handles this automatically**: When using Multer for file uploads in the API route, it receives the file as a buffer/stream and saves it with a sanitized temporary name. No shell operations involved.
+2. **For testing scripts**: Use glob patterns or simple filenames without special characters
+3. **Best practice**: When saving uploaded files, sanitize filenames to remove or replace special characters:
+   ```javascript
+   const sanitizedName = originalName
+     .replace(/[()]/g, '')  // Remove parentheses
+     .replace(/[,]/g, '-')  // Replace commas with dashes
+     .replace(/\s+/g, '_'); // Replace spaces with underscores
+   ```
+
+**Testing Workaround**: Copy test files to simpler names:
+```bash
+cd server/test-data
+cp *.xlsx ../sample-test.xlsx
+cd ..
+node test-full-pipeline.js sample-test.xlsx "Team Name"
+```
+
+**Important**: The production API using Multer will NOT have this issue, as it handles binary file uploads directly without shell operations. This only affects command-line testing scripts.
 
 ## Future Enhancements (Not for v1)
 - Batch processing multiple files

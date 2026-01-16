@@ -73,3 +73,11 @@ uploads/
 
 # Generated PDFs (if storing locally for testing)
 *.pdf
+
+# Test data and output (contains PII, generated artifacts)
+server/test-data/
+server/test-output.json
+server/sample-test.xlsx
+server/test-report*.pdf
+test-data/
+test-output.json
