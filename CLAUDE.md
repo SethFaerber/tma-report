@@ -102,11 +102,66 @@ Edit `server/services/pdfGenerator.js` - uses PDFKit for layout control
 
 ## Important Constraints
 
-1. **Excel Format**: Must match Microsoft Forms export format (90 columns, specific structure)
-2. **Question Count**: Exactly 82 scoreable questions (questions 4-85 in Excel)
-3. **Score Mapping**: "Strongly Agree" → 5, "Agree" → 4, "Neutral" → 3, "Disagree" → 2, "Strongly Disagree" → 1
+1. **Excel Format**: Must match Microsoft Forms export format (91 columns total, specific structure)
+2. **Question Count**: Exactly 82 scoreable questions (columns 9-90 / J-CM in Excel)
+3. **Score Mapping**: "Strongly Agree" → 5, "Agree" → 4, "Neutral" → 3, "Disagree" → 2, "Strongly Disagree" → 1 (case-insensitive, whitespace trimmed)
 4. **Claude Model**: Must use claude-opus-4-20250514 for analysis
 5. **PDF Structure**: Follow the detailed structure in the spec (cover page, driver scores, alignment tables, etc.)
+
+## Implementation Details
+
+### Phase 1: Backend Core (COMPLETED)
+
+#### Excel Structure (Confirmed from Real Data)
+The actual Microsoft Forms export has the following structure:
+- **Column 0 (A)**: ID
+- **Column 1 (B)**: Start time
+- **Column 2 (C)**: Completion time
+- **Column 3 (D)**: Email address
+- **Column 4 (E)**: **Respondent name** ← Extract from here
+- **Column 5 (F)**: Last modified time
+- **Columns 6-8 (G-I)**: Three open-ended text questions (skip these)
+- **Columns 9-90 (J-CM)**: 82 scoreable Likert scale questions ← Process these
+
+**Key Discovery**: The original spec indicated column D (index 3) for name, but the actual export has email in column D and name in column E (index 4).
+
+#### ExcelParser Service (`server/services/excelParser.js`)
+- Uses `xlsx` library to read .xlsx files
+- Extracts respondent names from column 4 (E)
+- Processes columns 9-90 for the 82 scoreable questions
+- Maps Likert scale text to numeric scores with lenient matching (case-insensitive, trimmed)
+- Handles missing/invalid responses gracefully by using `null` and logging warnings
+- Returns structured data: `{ respondents: [...], questions: [...] }`
+
+**Testing Notes**:
+- Tested with 13-respondent real data file
+- All respondents had complete 82/82 valid responses
+- Lenient text matching works well for variations in response formatting
+
+#### Calculator Service (`server/services/calculator.js`)
+- Calculates statistics for each question: `average`, `stdDev`, `distribution` (count of 1-5 responses)
+- Computes driver averages by aggregating question averages within each driver
+- Generates respondent summaries:
+  - Overall average across all questions
+  - Highest and lowest scoring drivers per respondent
+  - Outlier questions (where respondent differs from team by ≥1.5 points)
+- Provides sorted arrays for PDF sections:
+  - `sortedByAlignment`: Questions sorted by std dev (low to high) - most agreement first
+  - `sortedByDifference`: Questions sorted by std dev (high to low) - most disagreement first
+  - `sortedByHighestScore`: Questions by average (high to low) - strengths
+  - `sortedByLowestScore`: Questions by average (low to high) - weaknesses
+
+**Mathematical Approach**:
+- Standard deviation uses population formula (not sample)
+- Averages rounded to 2 decimal places for display
+- Null responses excluded from calculations but tracked
+
+#### Question Mapping (`server/config/questionMapping.js`)
+- Array of 82 question objects with driver, skill, and text
+- Maps directly to Excel columns 9-90 (J-CM)
+- Drivers: Purpose (9 questions), People (24 questions), Plan (20 questions), Product (23 questions), Profit (11 questions)
+- **Note**: Profit has 11 questions (not 10 as initially assumed)
+- Includes validation warning if question count ≠ 82
 
 ## Future Enhancements (Not for v1)
 - Batch processing multiple files
