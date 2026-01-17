@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// API URL - defaults to localhost for development, can be overridden with env var
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
 function App() {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,7 +48,7 @@ function App() {
     setLoginError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/verify', {
+      const response = await fetch(`${API_URL}/api/auth/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -131,7 +134,7 @@ function App() {
       }
 
       // Call API with Authorization header
-      const response = await fetch('http://localhost:3001/api/analyze', {
+      const response = await fetch(`${API_URL}/api/analyze`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`
