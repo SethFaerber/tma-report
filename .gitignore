@@ -75,10 +75,11 @@ uploads/
 *.pdf
 
 # Test data and output (contains PII, generated artifacts)
+# All test inputs go in test-data/, all test outputs go in test-output/
 server/test-data/
-server/test-output.json
+server/test-output/*
+!server/test-output/README.md
 server/sample-test.xlsx
-server/test-report*.pdf
-server/test-api-output.pdf
 test-data/
-test-output.json
+test-output/*
+!test-output/README.md

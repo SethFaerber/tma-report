@@ -6,7 +6,10 @@
 API_URL="http://localhost:3001/api/analyze"
 EXCEL_FILE="sample-test.xlsx"
 TEAM_NAME="Test Team"
-OUTPUT_FILE="test-api-output.pdf"
+OUTPUT_FILE="test-output/test-api-output.pdf"
+
+# Ensure test-output directory exists
+mkdir -p test-output
 
 echo "🚀 Testing /api/analyze endpoint"
 echo "================================"

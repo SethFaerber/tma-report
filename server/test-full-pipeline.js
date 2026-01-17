@@ -65,7 +65,7 @@ async function runFullPipeline() {
 
     // Step 4: Generate PDF
     console.log('\n📄 Step 4: Generating PDF report...');
-    const outputPath = path.join(__dirname, 'test-report.pdf');
+    const outputPath = path.join(__dirname, 'test-output', 'test-report.pdf');
     await generatePDF(teamName, calculatedData, claudeInsights, outputPath);
     console.log(`✅ PDF saved to: ${outputPath}`);
 
