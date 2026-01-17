@@ -31,8 +31,15 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+const authRoute = require('./routes/auth');
 const analyzeRoute = require('./routes/analyze');
-app.use('/api', analyzeRoute);
+const { verifyToken } = require('./middleware/authMiddleware');
+
+// Public routes (no authentication required)
+app.use('/api/auth', authRoute);
+
+// Protected routes (authentication required)
+app.use('/api', verifyToken, analyzeRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -48,4 +55,6 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`API Key configured: ${process.env.ANTHROPIC_API_KEY ? 'Yes' : 'No'}`);
+  console.log(`JWT Secret configured: ${process.env.JWT_SECRET ? 'Yes' : 'No (using default)'}`);
+  console.log(`Whitelisted Emails configured: ${process.env.WHITELISTED_EMAILS ? 'Yes' : 'No'}`);
 });
