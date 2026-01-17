@@ -5,6 +5,7 @@ node_modules/
 
 # Package lock files with JFrog URLs (let Render generate fresh)
 server/package-lock.json
+client/package-lock.json
 
 # Testing
 /coverage
