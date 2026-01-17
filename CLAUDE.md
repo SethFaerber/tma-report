@@ -261,6 +261,77 @@ The actual Microsoft Forms export has the following structure:
 
 **Rationale**: Protect PII, minimize data exposure, comply with privacy best practices
 
+### Phase 3: API Integration (IN PROGRESS)
+**Goal**: Build Express API route to orchestrate the full pipeline
+
+**Tasks**:
+- Create `server/routes/analyze.js` with POST `/api/analyze` endpoint
+- Integrate Multer for multipart/form-data file uploads
+- Orchestrate pipeline: Excel → Parse → Calculate → Claude → PDF
+- Implement comprehensive error handling middleware
+- Mount route in `server/index.js`
+- Set 120-second timeout for Claude API processing
+
+**API Endpoint Specification**:
+```
+POST /api/analyze
+Content-Type: multipart/form-data
+
+Request Body:
+- file: Excel file (.xlsx)
+- teamName: string
+- specialInstructions: string (optional)
+
+Response:
+- Success (200): PDF file stream (application/pdf)
+- Error (400/500): JSON error message
+```
+
+### Phase 4: React Frontend (PENDING)
+**Goal**: Build single-page React UI for file upload and PDF download
+
+**Tasks**:
+- Create file upload form component
+- Add team name input field (required)
+- Add special instructions textarea (optional)
+- Implement loading states with progress indication (30-60s wait)
+- Handle PDF blob download
+- Display user-friendly error messages
+- Add file type validation (.xlsx only)
+
+**Key UX Considerations**:
+- Clear loading indicator during Claude API processing
+- Disable form during processing
+- Provide estimated time remaining (30-60 seconds)
+- Show success message with download link
+
+### Phase 5: Deployment (PRIORITY)
+**Goal**: Get working product deployed to production for Mark to use
+
+**Priority Rationale**: Better to ship a functional product with imperfect PDF formatting than to delay deployment for aesthetic refinements. Mark needs this tool working end-to-end.
+
+**Tasks**:
+- Configure deployment environment (TBD: platform choice)
+- Set environment variables securely
+- Deploy backend and frontend
+- Test end-to-end with real Excel files
+- Document deployment URL and usage instructions
+
+### Phase 6: PDF Refinement (POST-DEPLOYMENT)
+**Goal**: Optimize PDF layout, spacing, and visual presentation
+
+**Note**: This phase happens AFTER deployment. The current PDF is functional and readable, but can be improved aesthetically.
+
+**Potential Refinements**:
+- Fine-tune table column widths for better text display
+- Optimize font sizes and line spacing
+- Improve page break logic for cleaner section boundaries
+- Enhance color scheme and visual hierarchy
+- Add more sophisticated chart/graph elements
+- Optimize text truncation strategies
+
+**Testing Approach**: Work with Mark's feedback on real-world usage to identify specific areas needing improvement.
+
 ## Known Issues & Workarounds
 
 ### Excel Filename Handling

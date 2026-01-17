@@ -79,5 +79,6 @@ server/test-data/
 server/test-output.json
 server/sample-test.xlsx
 server/test-report*.pdf
+server/test-api-output.pdf
 test-data/
 test-output.json
