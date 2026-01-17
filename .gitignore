@@ -3,6 +3,9 @@ node_modules/
 /.pnp
 .pnp.js
 
+# Package lock files with JFrog URLs (let Render generate fresh)
+server/package-lock.json
+
 # Testing
 /coverage
 
