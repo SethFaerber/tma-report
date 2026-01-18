@@ -38,6 +38,33 @@ function drawLine(doc, y) {
 }
 
 /**
+ * Draws grid lines for distribution tables
+ * @param {PDFDocument} doc - PDFKit document
+ * @param {number} x - Starting X position
+ * @param {number} y - Row Y position
+ * @param {number[]} colWidths - Array of column widths
+ * @param {number} rowHeight - Height of the row
+ */
+function drawTableGrid(doc, x, y, colWidths, rowHeight) {
+  doc.strokeColor('#b3b3b3').lineWidth(0.5);
+
+  // Draw vertical lines between columns
+  let currentX = x;
+  colWidths.forEach((width, index) => {
+    currentX += width;
+    // Draw vertical line from row top to row bottom
+    doc.moveTo(currentX, y - 2)
+       .lineTo(currentX, y + rowHeight - 2)
+       .stroke();
+  });
+
+  // Draw horizontal line at bottom of row
+  doc.moveTo(x, y + rowHeight - 2)
+     .lineTo(x + colWidths.reduce((sum, w) => sum + w, 0), y + rowHeight - 2)
+     .stroke();
+}
+
+/**
  * Generates Page 1: Cover Page
  */
 function generateCoverPage(doc, teamName, logoPath) {
@@ -183,7 +210,6 @@ function generateQuestionTable(doc, title, description, questions, format = 'dis
 
     // Table rows
     doc.font('Helvetica').fontSize(8);
-    let lastDriver = '';
 
     questions.forEach((q, index) => {
       // Check if we need a new page
@@ -192,22 +218,27 @@ function generateQuestionTable(doc, title, description, questions, format = 'dis
         y = MARGIN;
       }
 
-      // Show driver name only for first question of each driver
-      const driverText = q.driver !== lastDriver ? q.driver : '';
-      lastDriver = q.driver;
+      // Show driver name in every row
+      const driverText = q.driver;
 
       // Truncate text if too long
       const competencyText = `${q.skill}: ${q.text}`;
       const truncated = competencyText.length > 60 ? competencyText.substring(0, 57) + '...' : competencyText;
 
-      doc.text(driverText, tableX, y, { width: colWidths[0] });
-      doc.text(truncated, tableX + colWidths[0], y, { width: colWidths[1] });
+      // Vertical centering offset for 20px row height with 8px font
+      const verticalOffset = 6;
+
+      doc.text(driverText, tableX, y + verticalOffset, { width: colWidths[0] });
+      doc.text(truncated, tableX + colWidths[0], y + verticalOffset, { width: colWidths[1] });
 
       // Distribution counts
       q.distribution.forEach((count, idx) => {
         const xPos = tableX + colWidths[0] + colWidths[1] + colWidths.slice(2, 2 + idx).reduce((sum, w) => sum + w, 0);
-        doc.text(String(count), xPos, y, { width: colWidths[2 + idx], align: 'center' });
+        doc.text(String(count), xPos, y + verticalOffset, { width: colWidths[2 + idx], align: 'center' });
       });
+
+      // Draw grid lines for this row
+      drawTableGrid(doc, tableX, y, colWidths, 20);
 
       y += 20;
     });
@@ -230,7 +261,6 @@ function generateQuestionTable(doc, title, description, questions, format = 'dis
 
     // Table rows
     doc.font('Helvetica').fontSize(8);
-    let lastDriver = '';
 
     questions.forEach((q) => {
       // Check if we need a new page
@@ -239,9 +269,8 @@ function generateQuestionTable(doc, title, description, questions, format = 'dis
         y = MARGIN;
       }
 
-      // Show driver name only for first question of each driver
-      const driverText = q.driver !== lastDriver ? q.driver : '';
-      lastDriver = q.driver;
+      // Show driver name in every row
+      const driverText = q.driver;
 
       // Truncate text if too long
       const competencyText = `${q.skill}: ${q.text}`;
@@ -404,38 +433,38 @@ async function generatePDF(teamName, calculatedData, claudeInsights, outputPath)
         calculatedData.weakestDriver
       );
 
-      // Pages 3-4: Areas of Alignment
+      // Pages 3-4: Response Distribution (organized by Excel question order)
       generateQuestionTable(
         doc,
-        'Areas of Alignment',
-        'This chart shows where your team was the most aligned on your relative level of maturity.',
+        'Response Distribution',
+        'This chart shows the distribution of team responses for all skills and competencies, organized by driver in question order.',
         calculatedData.sortedByAlignment,
         'distribution'
       );
 
-      // Pages 5-6: Areas of Key Difference
+      // Pages 5-6: Team Alignment Analysis (organized by Excel question order)
       generateQuestionTable(
         doc,
-        'Areas of Key Difference',
-        'This chart shows where your team was the least aligned on where your business currently stands.',
+        'Team Alignment Analysis',
+        'This chart provides another view of response patterns across all competencies. Questions are grouped by strategic driver.',
         calculatedData.sortedByDifference,
         'distribution'
       );
 
-      // Pages 7-8: Highest Scores
+      // Pages 7-8: Average Scores by Competency
       generateQuestionTable(
         doc,
-        'Highest Scores',
-        'This chart shows your team\'s biggest strengths.',
+        'Average Scores by Competency',
+        'This chart shows average scores for all skills and competencies, organized by driver in question order.',
         calculatedData.sortedByHighestScore,
         'average'
       );
 
-      // Pages 9-10: Lowest Scores
+      // Pages 9-10: Detailed Score Summary
       generateQuestionTable(
         doc,
-        'Lowest Scores',
-        'This chart shows your team\'s biggest weaknesses.',
+        'Detailed Score Summary',
+        'A complete summary of average scores across all competencies, grouped by strategic driver.',
         calculatedData.sortedByLowestScore,
         'average'
       );

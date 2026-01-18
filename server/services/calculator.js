@@ -231,11 +231,12 @@ function calculateAll(parsedData) {
     lowestQuestion,
     mostAligned,
     mostDisagreed,
-    // Sorted question arrays for PDF sections
-    sortedByAlignment: sortedByStdDev, // Low to high std dev
-    sortedByDifference: [...questionsWithStats].sort((a, b) => b.stdDev - a.stdDev), // High to low std dev
-    sortedByHighestScore: sortedByAverage, // High to low average
-    sortedByLowestScore: [...sortedByAverage].reverse() // Low to high average
+    // Question arrays for PDF sections (all in Excel question order)
+    // This groups questions by driver in the order they appear in the Excel file
+    sortedByAlignment: questionsWithStats, // Excel order (columns 9-90)
+    sortedByDifference: questionsWithStats, // Excel order (columns 9-90)
+    sortedByHighestScore: questionsWithStats, // Excel order (columns 9-90)
+    sortedByLowestScore: questionsWithStats // Excel order (columns 9-90)
   };
 }
 

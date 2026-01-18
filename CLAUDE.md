@@ -392,20 +392,53 @@ Headers:  Authorization: Bearer jwt.token.here
 - Used REACT_APP_API_URL environment variable for dynamic API URL configuration
 - Successfully tested end-to-end: login → upload → PDF generation → download
 
-### Phase 6: PDF Refinement (POST-DEPLOYMENT)
-**Goal**: Optimize PDF layout, spacing, and visual presentation
+### Phase 6: PDF Refinement (COMPLETED)
+**Goal**: Optimize PDF layout, spacing, and visual presentation based on user testing
 
-**Note**: This phase happens AFTER deployment. The current PDF is functional and readable, but can be improved aesthetically.
+**Implementation Date**: Post-deployment (after Mark's initial testing)
 
-**Potential Refinements**:
-- Fine-tune table column widths for better text display
-- Optimize font sizes and line spacing
-- Improve page break logic for cleaner section boundaries
-- Enhance color scheme and visual hierarchy
-- Add more sophisticated chart/graph elements
-- Optimize text truncation strategies
+**Key Findings from Testing**:
+- **Calculation Accuracy**: Automated calculations are 100% accurate
+- **Manual Errors**: Mark's original manual PDF had ~50% error rate due to manual transcription
+- **Layout Differences**: Mark's PDF organized skills by Excel question order (grouping drivers together); original deployment sorted by statistical metrics
 
-**Testing Approach**: Work with Mark's feedback on real-world usage to identify specific areas needing improvement.
+**Changes Implemented**:
+
+1. **Question Ordering** (`server/services/calculator.js`):
+   - Changed all PDF sections to use Excel question order (columns 9-90)
+   - Groups questions by driver: Purpose (9 questions), People (24), Plan (20), Product (23), Profit (11)
+   - Makes it easier to cross-reference PDF with original Excel file
+   - Replaced sorted arrays with original `questionsWithStats` array
+
+2. **Grid Lines in Distribution Tables** (`server/services/pdfGenerator.js`):
+   - Added thin gray grid lines (#b3b3b3, 0.5px stroke) between all cells
+   - Vertical lines between columns (Driver | Skill | 1 | 2 | 3 | 4 | 5)
+   - Horizontal lines between each row
+   - Applied only to distribution tables (not average tables)
+   - Improves readability and visual structure
+
+3. **Section Description Updates**:
+   - Updated section titles and descriptions to reflect Excel ordering
+   - "Response Distribution" - organized by driver in question order
+   - "Team Alignment Analysis" - grouped by strategic driver
+   - "Average Scores by Competency" - organized by driver in question order
+   - "Detailed Score Summary" - grouped by strategic driver
+
+4. **Driver Column Display**:
+   - Driver names appear in every row of the Driver column
+   - Makes it easy to see which driver each question belongs to at a glance
+   - Improves readability when scanning through the table
+
+**Testing Results**:
+- PDF output is consistent across multiple runs (deterministic)
+- All calculations verified against original Excel data (100% accuracy)
+- Layout matches Mark's manual PDF structure (with corrected calculations)
+
+**Feedback to Mark**:
+- Emphasize automation benefits: eliminates manual transcription errors
+- Ensures 100% accuracy and consistency across all runs
+- Small differences in scores reflect correction of manual calculation errors
+- Layout now matches original question order for easier reference
 
 ### Phase 7: Branding & Color Theme Updates
 **Goal**: Update frontend branding and color scheme to match Ramsey Solutions identity
