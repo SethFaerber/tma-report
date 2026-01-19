@@ -238,7 +238,8 @@ function App() {
           </form>
 
           <footer className="footer">
-            <p>Powered by Claude AI • Built by Ramsey Solutions</p>
+            <p>Built by Seth Faerber for Ramsey Solutions</p>
+            <p>Powered by Claude AI</p>
           </footer>
         </div>
       </div>
@@ -348,7 +349,8 @@ function App() {
         </form>
 
         <footer className="footer">
-          <p>Powered by Claude AI • Built by Ramsey Solutions</p>
+          <p>Built by Seth Faerber for Ramsey Solutions</p>
+          <p>Powered by Claude AI</p>
         </footer>
       </div>
     </div>
