@@ -221,6 +221,16 @@ function calculateAll(parsedData) {
   const mostAligned = sortedByStdDev[0]; // Lowest std dev = most agreement
   const mostDisagreed = sortedByStdDev[sortedByStdDev.length - 1]; // Highest std dev = most disagreement
 
+  // Helper function to sort by driver order: Purpose, People, Plan, Product, Profit
+  const driverOrder = ['Purpose', 'People', 'Plan', 'Product', 'Profit'];
+  const sortByDriverOrder = (questions) => {
+    return questions.sort((a, b) => {
+      const aIndex = driverOrder.indexOf(a.driver);
+      const bIndex = driverOrder.indexOf(b.driver);
+      return aIndex - bIndex;
+    });
+  };
+
   return {
     questions: questionsWithStats,
     respondents: respondentSummaries,
@@ -231,12 +241,13 @@ function calculateAll(parsedData) {
     lowestQuestion,
     mostAligned,
     mostDisagreed,
-    // Question arrays for PDF sections (all in Excel question order)
-    // This groups questions by driver in the order they appear in the Excel file
-    sortedByAlignment: questionsWithStats, // Excel order (columns 9-90)
-    sortedByDifference: questionsWithStats, // Excel order (columns 9-90)
-    sortedByHighestScore: questionsWithStats, // Excel order (columns 9-90)
-    sortedByLowestScore: questionsWithStats // Excel order (columns 9-90)
+    // All questions in Excel order for "Response Distribution" section
+    allQuestionsInOrder: questionsWithStats,
+    // Top 8 questions for each focused analysis section, sorted by driver order
+    sortedByAlignment: sortByDriverOrder(sortedByStdDev.slice(0, 8)), // 8 questions with lowest std dev (most aligned)
+    sortedByDifference: sortByDriverOrder([...questionsWithStats].sort((a, b) => b.stdDev - a.stdDev).slice(0, 8)), // 8 questions with highest std dev (most different)
+    sortedByHighestScore: sortByDriverOrder(sortedByAverage.slice(0, 8)), // 8 questions with highest averages (biggest strengths)
+    sortedByLowestScore: sortByDriverOrder([...sortedByAverage].reverse().slice(0, 8)) // 8 questions with lowest averages (biggest weaknesses)
   };
 }
 
