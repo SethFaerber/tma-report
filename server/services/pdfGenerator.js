@@ -227,9 +227,11 @@ function generateQuestionTable(doc, title, description, questions, format = 'dis
 
       // Vertical centering offset for 20px row height with 8px font
       const verticalOffset = 6;
+      // Left padding for skill & competency column
+      const skillPadding = 3;
 
       doc.text(driverText, tableX, y + verticalOffset, { width: colWidths[0] });
-      doc.text(truncated, tableX + colWidths[0], y + verticalOffset, { width: colWidths[1] });
+      doc.text(truncated, tableX + colWidths[0] + skillPadding, y + verticalOffset, { width: colWidths[1] - skillPadding });
 
       // Distribution counts
       q.distribution.forEach((count, idx) => {
@@ -433,40 +435,49 @@ async function generatePDF(teamName, calculatedData, claudeInsights, outputPath)
         calculatedData.weakestDriver
       );
 
-      // Pages 3-4: Response Distribution (organized by Excel question order)
+      // Pages 3-?: Response Distribution (ALL 82 questions in Excel order)
       generateQuestionTable(
         doc,
         'Response Distribution',
         'This chart shows the distribution of team responses for all skills and competencies, organized by driver in question order.',
+        calculatedData.allQuestionsInOrder,
+        'distribution'
+      );
+
+      // Next page: Areas of Alignment (TOP 8 with lowest std dev)
+      generateQuestionTable(
+        doc,
+        'Areas of Alignment',
+        'This chart shows where your team was the most aligned on your relative level of maturity.',
         calculatedData.sortedByAlignment,
         'distribution'
       );
 
-      // Pages 5-6: Team Alignment Analysis (organized by Excel question order)
+      // Next page: Areas of Key Difference (TOP 8 with highest std dev)
       generateQuestionTable(
         doc,
-        'Team Alignment Analysis',
-        'This chart provides another view of response patterns across all competencies. Questions are grouped by strategic driver.',
+        'Areas of Key Difference',
+        'This chart shows where your team was the least aligned on where your business currently stands.',
         calculatedData.sortedByDifference,
         'distribution'
       );
 
-      // Pages 7-8: Average Scores by Competency
+      // Next page: Highest Scores (TOP 8 with highest averages)
       generateQuestionTable(
         doc,
-        'Average Scores by Competency',
-        'This chart shows average scores for all skills and competencies, organized by driver in question order.',
+        'Highest Scores',
+        'This chart shows your team\'s biggest strengths.',
         calculatedData.sortedByHighestScore,
-        'average'
+        'distribution'
       );
 
-      // Pages 9-10: Detailed Score Summary
+      // Next page: Lowest Scores (TOP 8 with lowest averages)
       generateQuestionTable(
         doc,
-        'Detailed Score Summary',
-        'A complete summary of average scores across all competencies, grouped by strategic driver.',
+        'Lowest Scores',
+        'This chart shows your team\'s biggest weaknesses.',
         calculatedData.sortedByLowestScore,
-        'average'
+        'distribution'
       );
 
       // Page 11: Discussion Questions
